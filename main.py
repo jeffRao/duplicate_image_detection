@@ -4,8 +4,8 @@ from service.image_detect import detect_image
 from service.image_process import process_image
 
 if __name__ == '__main__':
-    image_path = r'F:\壁纸'
-    output_path = r'F:\壁纸测试'
+    image_path = r'F:\照片备份'
+    output_path = r'F:\照片整理\2024'
     process_type = 'copy' # move or copy, move 图片移动到output_path中，copy图片复制到output_path中
 
     processed_image_list = process_image(image_path)

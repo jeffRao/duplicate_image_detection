@@ -150,9 +150,9 @@ def cnn_encoding(image_path: str, model_name: str):
         # 将解码后的图片信息读取到一个BytesIO对象中
         image_io = BytesIO(image_decode)
         # 使用PIL的Image模块打开图片， 并将彩色图像转换为灰度图像
-        img = Image.open(image_io).convert('RGB')
         # img = Image.open(image_io).convert('L').convert('RGB')
-        input_batch = preprocess(img).unsqueeze(0).to(device)
+        with Image.open(image_io).convert('RGB') as img:
+            input_batch = preprocess(img).unsqueeze(0).to(device)
 
         with torch.no_grad():
             output = model(input_batch)

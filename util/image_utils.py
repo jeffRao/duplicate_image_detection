@@ -13,17 +13,17 @@ from base64 import b64encode
 # 计算图片中的颜色个数
 def count_colors(image_path, threshold=0.75):
     # 打开并加载图像
-    img_file = Image.open(image_path).convert('RGB')
-    width, height = img_file.size
-    # 长或宽大于500，则压缩图片至500像素
-    if max(width, height) > 100:
-        ratio = 100 / max(width, height)
-        width = int(width * ratio)
-        height = int(height * ratio)
-    threshold_count = width * height * threshold
-    img_file = img_file.resize((width, height), Image.LANCZOS)
-    # 将图像数据reshape成二维数组，以获取颜色种类数量
-    data = np.array(img_file)
+    with Image.open(image_path).convert('RGB') as img_file:
+        width, height = img_file.size
+        # 长或宽大于500，则压缩图片至500像素
+        if max(width, height) > 100:
+            ratio = 100 / max(width, height)
+            width = int(width * ratio)
+            height = int(height * ratio)
+        threshold_count = width * height * threshold
+        img_file = img_file.resize((width, height), Image.LANCZOS)
+        # 将图像数据reshape成二维数组，以获取颜色种类数量
+        data = np.array(img_file)
 
     counts = Counter()
     for row in data:
@@ -47,8 +47,8 @@ def count_colors(image_path, threshold=0.75):
 
 # 获取本地图片的尺寸
 def get_local_image_size(image_path):
-    image = Image.open(image_path)
-    width, height = image.size
+    with Image.open(image_path) as image:
+        width, height = image.size
     if max(width, height) > 1000:
         ratio = 1000 / max(width, height)
         width = int(width * ratio)
@@ -59,8 +59,8 @@ def get_local_image_size(image_path):
 # 获取在线图片的尺寸
 def get_online_image_size(image_url):
     response = requests.get(image_url)
-    image = Image.open(response.content)
-    width, height = image.size
+    with Image.open(response.content) as image:
+        width, height = image.size
     return width, height
 
 
@@ -91,6 +91,7 @@ def read_image(_image):
     :return: 图片名称，图片后缀，图片base64编码，宽度，高度
     """
     _image = _image.strip()
+    image = None
     try:
         if _image.startswith('http'):
             response = requests.get(_image)
@@ -143,4 +144,7 @@ def read_image(_image):
         print('read image info failed. ')
         traceback.print_exc()
         return None, None, None, None, None
+    finally:
+        if image:
+            image.close()
 

@@ -2,6 +2,9 @@ import os
 from time import time
 from typing import List
 
+from torchvision.datasets.folder import is_image_file
+from tqdm import tqdm
+
 from service.image_context import ProcessedImage
 from util import file_util
 from util.calculator_util import cosine_similarity
@@ -22,21 +25,28 @@ def detect_image(image_list: List[ProcessedImage], root_dir: str, oper_type: str
     remove_dir = os.path.join(root_dir, 'remove')
     if not os.path.exists(remove_dir):
         os.makedirs(remove_dir)
+    other_dir = os.path.join(root_dir, 'other')
+    if not os.path.exists(other_dir):
+        os.makedirs(other_dir)
 
     index = 1
-    for image in image_list:
-        for detected_image in detected_list:
-            similarity = cosine_similarity(image, detected_image)
-            if similarity > 0.95:
-                operate_repeat_image(image, detected_image, detected_list, root_dir, operate_image_method)
-                break
-            elif similarity > 0.6:
-                # 图片高度相似，取文件尺寸较大的图片
-                operate_similar_image(image, detected_image, detected_list, root_dir, operate_image_method)
-                break
-        if image.new_file_name is None:
-            operate_different_image(image, index, detected_list, root_dir, operate_image_method)
-            index += 1
+    for image in tqdm(image_list, desc='detecting image'):
+        if is_image_file(image.image_name):
+            for detected_image in detected_list:
+                similarity = cosine_similarity(image, detected_image)
+                if similarity > 0.95:
+                    operate_repeat_image(image, detected_image, detected_list, root_dir, operate_image_method)
+                    break
+                elif similarity > 0.7:
+                    # 图片高度相似，取文件尺寸较大的图片
+                    operate_similar_image(image, detected_image, detected_list, root_dir, operate_image_method)
+                    break
+            if image.new_file_name is None:
+                operate_different_image(image, index, detected_list, root_dir, operate_image_method)
+                index += 1
+        else:
+            operate_image_method(os.path.join(image.dir_name, image.image_name),
+                                os.path.join(root_dir, 'other', image.image_name))
 
 
 def operate_repeat_image(new_image, processed_image, detected_list, root_dir: str, oper_method):
